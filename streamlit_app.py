@@ -22,11 +22,11 @@ nomes_para_siglas = {
     'Rio Grande do Sul': 'RS', 'Rondônia': 'RO', 'Roraima': 'RR', 'Santa Catarina': 'SC',
     'São Paulo': 'SP', 'Sergipe': 'SE', 'Tocantins': 'TO'
 }
-dados['Loja'] = dados['Loja'].map(nomes_para_siglas).fillna(dados['Loja'])
 
-# Agrupar o faturamento total por estado
+dados['Sigla'] = dados['Loja'].map(nomes_para_siglas)
+
 faturamento_estados = (
-    dados.groupby('Loja')['Faturamento']
+    dados.groupby(['Sigla', 'Loja'])['Faturamento']
     .sum()
     .reset_index()
 )
@@ -40,21 +40,20 @@ mapa = px.choropleth(
     faturamento_estados,
     geojson=geojson_data,
     featureidkey='properties.sigla',
-    locations='Loja',
+    locations='Sigla',
     color='Faturamento',
     color_continuous_scale='YlOrRd',
     scope='south america',
     title='Faturamento por Estado',
+    custom_data=[ 'Loja', 'Faturamento']
 )
 
-# Ajustes de exibição do mapa
-mapa.update_geos(
-    fitbounds="locations", 
-    visible=False,
-    bgcolor="rgba(38,39,48,255)"
+mapa.update_traces(
+    hovertemplate='<b>%{customdata[0]}</b><br>Faturamento: R$ %{customdata[1]:,.2f}<extra></extra>'
 )
 
-# Ajustes de layout
+# Ajustes do mapa
+mapa.update_geos(fitbounds="locations", visible=False, bgcolor="rgba(38,39,48,255)")
 mapa.update_layout(
     margin={"r":0,"t":0,"l":0,"b":0},
     coloraxis_colorbar=dict(title='Faturamento (R$)'),
@@ -70,21 +69,13 @@ st.plotly_chart(mapa, use_container_width=True)
 
 
 st.title("Análise de Vendas por Loja e Produto:")
-#  Inserir um filtro para escolher uma loja e ver os dados dela
 lojas = sorted(dados['Loja'].unique())
 loja_escolhida = st.sidebar.selectbox('Escolha a loja:', lojas)
 
 produtos_loja = dados[dados['Loja'] == loja_escolhida]['Produto'].unique()
-
-# Criar uma lista de opções de produtos, incluindo 'Todos'
 produtos_opcoes = ['Todos'] + sorted(produtos_loja.tolist())
-produtos_selecionados = st.sidebar.multiselect(
-    'Escolha os produtos:',
-    options=produtos_opcoes,
-    default=['Todos']
-)
+produtos_selecionados = st.sidebar.multiselect('Escolha os produtos:', options=produtos_opcoes, default=['Todos'])
 
-# Lógica de filtro para os dados da loja escolhida
 if 'Todos' not in produtos_selecionados and produtos_selecionados:
     dados_loja = dados[(dados['Loja'] == loja_escolhida) & (dados['Produto'].isin(produtos_selecionados))]
 else:
