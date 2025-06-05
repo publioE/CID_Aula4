@@ -1,0 +1,11 @@
+# Ambiente virtual Python
+venv/
+env/
+
+# Bytecode Python
+*.pyc
+__pycache__/
+
+# Configuração do PyCharm
+.idea/
+
