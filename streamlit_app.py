@@ -97,6 +97,14 @@ grafico_pizza = px.pie(
     faturamento_produtos,
     names='Produto',
     values='Faturamento',
-    title=f'Participação dos Produtos no Faturamento da Loja {loja_escolhida}'
+    title=f'Participação dos Produtos no Faturamento da Loja {loja_escolhida}',
+    hover_data={'Faturamento': ':.2f'}  # Formata o hover para 2 casas decimais
 )
+
+# Atualizando o gráfico de pizza para exibir o faturamento formatado
+grafico_pizza.update_traces(
+    hovertemplate='<b>%{label}</b><br>Faturamento: R$ %{value:,.2f}<extra></extra>',
+    textinfo='none'
+)
+
 st.plotly_chart(grafico_pizza, use_container_width=True)
